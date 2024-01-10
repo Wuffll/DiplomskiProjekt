@@ -12,6 +12,7 @@
 #include <assimp/postprocess.h>
 
 #include <iostream>
+#include <string>
 
 #include "Shader.h"
 #include "VertexArray.h"
@@ -32,22 +33,22 @@
 #include "Debug.h"
 
 // change directory to yours
-#define SHADER_PATH "D:\\Programming\\repos\\RA_Labs\\Lab1\\Shaders\\"
-#define MODELS_PATH "D:\\Programming\\repos\\RA_Labs\\Lab1\\Models\\"
-#define SPLINE_PATH "D:\\Programming\\repos\\RA_Labs\\Debug\\"
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
 GLFWwindow* InitWindow();
 
-int main(void)
+int main(int argc, char* argv[])
 {
+    std::string ExePath = argv[0];
+    ExePath = ExePath.substr(0, ExePath.find_last_of('\\'));
+
     GLFWwindow* window = InitWindow();
 
-    Shader shader(std::string(SHADER_PATH).append("general.glsl"));
+    Shader shader(ExePath + "\\Shaders\\general.glsl");
 
-    // Objekt obj("FirstObject", std::string(MODELS_PATH).append("airplane_f16_1.obj"), shader);
+    // Objekt obj("FirstObject", ExePath + "airplane_f16_1.obj", shader);
     
     Renderer renderer(shader);
 
