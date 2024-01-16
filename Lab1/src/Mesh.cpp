@@ -58,7 +58,7 @@ Mesh::Mesh(const std::string& filePath)
         double scaleVal = 2.0l / M;
         mTransformMatrix.Scale(glm::vec3(scaleVal, scaleVal, scaleVal));
 
-        mTransformMatrix.Translation(glm::vec3(center[0], center[1], center[2]));
+        // mTransformMatrix.Translation(glm::vec3(center[0], center[1], center[2]));
 
         // std::cout << "Processing indices..." << std::endl;
         for (unsigned int i = 0; i < mesh->mNumFaces; i++)

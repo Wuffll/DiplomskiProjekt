@@ -399,3 +399,6 @@ FodyWeavers.xsd
 
 # Allow 3D objects
 !/*/Models/*.obj
+
+# Don't include dependencies (unzip the Dependencies.zip file)
+!./Dependencies/*

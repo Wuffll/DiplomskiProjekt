@@ -48,22 +48,21 @@ int main(int argc, char* argv[])
 
     Shader shader(ExePath + "\\Shaders\\general.glsl");
 
-    // Objekt obj("FirstObject", ExePath + "airplane_f16_1.obj", shader);
+    Objekt obj("FirstObject", ExePath + "\\Models\\Character.fbx", shader);
     
     Renderer renderer(shader);
 
-    // renderer.AddDrawableObject(obj);
+    renderer.AddDrawableObject(obj);
 
     Camera camera;
     camera.SetShader("view", &shader);
 
-    // camera.SetPosition({ 0.0f, 0.0f, -1.0f });
+    camera.SetPosition({ 0.0f, 0.0f, -5.0f });
 
-    Transform projection(glm::mat4(1.0f)); // glm::perspective(45.0f, 1.0f, 0.1f, 1000.0f));
+    Transform projection(glm::perspective(45.0f, 1.0f, 0.1f, 1000.0f));
 
     shader.Bind();
     shader.SetUniformMatrix4f("projection", projection.GetMatrix());
-    shader.SetUniformMatrix4f("model", glm::mat4(1.0f));
 
     // Testing ground
 
@@ -129,7 +128,7 @@ int main(int argc, char* argv[])
         IBO.Bind();
         glDrawElements(VAO.GetDrawingMode(), IBO.GetIndicesCount(), GL_UNSIGNED_INT, nullptr);
 
-        // renderer.Draw();
+        renderer.Draw();
 
         if (deltaTime >= 2.0f && deltaTime < 3.0f)
         {

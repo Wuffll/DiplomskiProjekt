@@ -11,8 +11,8 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\Lib\assimp531;$(SolutionDir)Dependencies\Lib\GLFW338;$(SolutionDir)Dependencies\Lib\glew210;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>assimp-vc143-mt.lib;opengl32.lib;glfw3.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\Lib\assimp531;$(SolutionDir)Dependencies\Lib\GLFW338;$(SolutionDir)Dependencies\Lib\glew210;$(SolutionDir)Dependencies\Lib\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>zlibstaticd.lib;assimp-vc143-mtd.lib;opengl32.lib;glfw3.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
