@@ -401,4 +401,4 @@ FodyWeavers.xsd
 !/*/Models/*.obj
 
 # Don't include dependencies (unzip the Dependencies.zip file)
-!./Dependencies/*
+Dependencies/*
