@@ -5,6 +5,14 @@
 - OpenGL 4.5
 - MS Visual Studio 2022
 
+## Build steps
+
+Once you have clones the repository, make sure to do the following steps.
+
+1. Unzip the Dependencies.zip file (it was zipped due to the size being over 100 MB)
+2. Once you open the .sln file, make sure the configuration is set to Debug + Win32 (might get updated later to work on Release)
+3. In case you run into any problem, consult the following section (Troubleshooting problems)
+
 ## Troubleshooting problems
 There are several things to keep in mind when the program isn't able to execute or throws an exception.
 
