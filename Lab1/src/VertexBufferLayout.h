@@ -78,6 +78,13 @@ public:
 	}
 
 	template<>
+	void Push<int>(const unsigned int& count)
+	{
+		mElements.push_back({ GL_INT, count, GL_FALSE });
+		mStride += count * VertexBufferElement::SizeOfDataType(GL_INT);
+	}
+
+	template<>
 	void Push<unsigned char>(const unsigned int& count)
 	{
 		mElements.push_back({ GL_UNSIGNED_BYTE, count, GL_TRUE });

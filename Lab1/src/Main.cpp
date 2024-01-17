@@ -23,6 +23,8 @@
 #include "Objekt.h"
 #include "Transform.h"
 
+#include "MeshV2.h"
+
 #include "Spline.h"
 #include "Camera.h"
 
@@ -48,11 +50,13 @@ int main(int argc, char* argv[])
 
     Shader shader(ExePath + "\\Shaders\\general.glsl");
 
-    Objekt obj("FirstObject", ExePath + "\\Models\\Character.fbx", shader);
+    // Objekt obj("FirstObject", ExePath + "\\Models\\Character.fbx", shader);
+
+    MeshV2 mesh(ExePath + "\\Models\\Character.fbx");
     
     Renderer renderer(shader);
 
-    renderer.AddDrawableObject(obj);
+    // renderer.AddDrawableObject(obj);
 
     Camera camera;
     camera.SetShader("view", &shader);
@@ -63,37 +67,6 @@ int main(int argc, char* argv[])
 
     shader.Bind();
     shader.SetUniformMatrix4f("projection", projection.GetMatrix());
-
-    // Testing ground
-
-    VertexArray VAO;
-    VertexBuffer VBO;
-    IndexBuffer IBO;
-
-    VertexBufferLayout layout;
-    layout.Push<float>(3);
-    layout.Push<float>(3);
-
-    VAO.SetLayout(layout, false);
-    VAO.SetDrawingMode(GL_TRIANGLES);
-    VAO.SetUsage(GL_STATIC_DRAW);
-
-    float vertices[] = {
-        -1.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-        -1.0f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f
-    };
-
-    unsigned int indices[] = {
-        0, 1, 2,
-        2, 3, 0
-    };
-
-    VBO.InsertDataWithOffset(vertices, sizeof(vertices), 0);
-    IBO.InsertDataWithOffset(indices, sizeof(indices) / sizeof(unsigned int), 0);
-
-    VAO.AddBuffer(VBO, IBO);
 
     FpsManager fpsManager(120);
     TimeControl timer;
@@ -123,34 +96,8 @@ int main(int argc, char* argv[])
             // std::cout << "Position = " << Debug::GlmString(transform.GetPosition()).c_str() << "; Rotation = " << Debug::GlmString(transform.GetOrientation()) << std::endl;
         }
 
-        VAO.Bind();
-        VBO.Bind<Vertex>(0);
-        IBO.Bind();
-        glDrawElements(VAO.GetDrawingMode(), IBO.GetIndicesCount(), GL_UNSIGNED_INT, nullptr);
-
-        renderer.Draw();
-
-        if (deltaTime >= 2.0f && deltaTime < 3.0f)
-        {
-            deltaTime += 1.1f;
-
-            unsigned int data[] = { 4, 5, 6, 6, 7, 4 };
-            IBO.InsertDataWithOffset(data, sizeof(data) / sizeof(unsigned int), IBO.GetBufferSize());
-        }
-
-        if (deltaTime >= 5.0f && deltaTime < 6.0f)
-        {
-            deltaTime += 1.1f;
-
-            float data[] = {
-                    0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-                    1.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-                    1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-                    0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f
-            };
-            VBO.InsertDataWithOffset(data, sizeof(data), VBO.GetBufferSize());
-        }
-
+        // renderer.Draw();
+        mesh.Draw(shader);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
