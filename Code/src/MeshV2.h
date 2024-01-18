@@ -26,7 +26,7 @@ struct VertexBoneData
 	{
 	}
 
-	void AddBoneData(unsigned int boneID, float weight)
+	void AddBoneData(const unsigned int& boneID, const float& weight)
 	{
 		for (unsigned int j = 0; j < ARRAY_SIZE_IN_ELEMENTS(mBoneIDs); j++)
 		{
