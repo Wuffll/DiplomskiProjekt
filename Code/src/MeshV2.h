@@ -75,6 +75,9 @@ public:
 
 private:
 
+	void PrintAnimations(const aiScene* pScene);
+	void ConfigureVAOLayout();
+
 	std::string mFilePath;
 
 	std::vector<VertexBoneData> mVertexToBonesVector; // mapping from vertex to bones (which bones affect a certain vertex)

@@ -30,8 +30,12 @@ public:
 	void Unbind() const;
 
 	void SetUniformMatrix4f(const std::string& name, const glm::mat4& matrix);
+
+	void SetUniform1i(const std::string name, const int& value);
 	void SetUniform4f(const std::string& name, float f0, float f1, float f2, float f3);
+
 	void SetUniform4fv(const std::string& name, const std::vector<float>& vec4f);
+
 
 	~Shader();
 

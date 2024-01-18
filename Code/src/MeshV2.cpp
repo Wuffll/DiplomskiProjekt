@@ -128,36 +128,6 @@ int MeshV2::GetBoneID(const aiBone* pBone)
 
 void MeshV2::Init(const std::string& filePath)
 {
-    VertexBufferLayout layout;
-    layout.Push<float>(3);
-    layout.Push<float>(3);
-    if (MAX_NUM_OF_BONES_PER_VERTEX > 4)
-    {
-        int numOfBones;
-        for (int j = MAX_NUM_OF_BONES_PER_VERTEX; j > 0; j -= 4)
-        {
-            numOfBones = (j >= 4) ? 4 : j;
-
-            layout.Push<unsigned int>(numOfBones);
-        }
-        for (int j = MAX_NUM_OF_BONES_PER_VERTEX; j > 0; j -= 4)
-        {
-            numOfBones = (j >= 4) ? 4 : j;
-
-            layout.Push<float>(numOfBones);
-        }
-    }
-    else
-    {
-        layout.Push<unsigned int>(MAX_NUM_OF_BONES_PER_VERTEX);
-        layout.Push<float>(MAX_NUM_OF_BONES_PER_VERTEX);
-    }
-
-    mVAO.Bind();
-    mVAO.SetLayout(layout, false);
-    mVAO.SetDrawingMode(GL_TRIANGLES);
-    mVAO.SetUsage(GL_STATIC_DRAW);
-
     Assimp::Importer importer;
     
     const aiScene* pScene = importer.ReadFile(filePath.c_str(),
@@ -174,20 +144,12 @@ void MeshV2::Init(const std::string& filePath)
     
     ParseScene(pScene);
 
-    auto mesh = pScene->mMeshes[0];
+    PrintAnimations(pScene);
 
-    if (pScene->HasAnimations())
-    {
-        for (int j = 0; j < pScene->mNumAnimations; j++)
-        {
-            Debug::Print(pScene->mAnimations[j]->mName.C_Str());
-        }
-    }
+    auto mesh = pScene->mMeshes[0];
 
     mVertices.reserve(mesh->mNumVertices);
     mIndices.reserve(mesh->mNumFaces * 3);
-
-    // std::cout << "Processing vertices...(" << mesh->mNumVertices << ")" << std::endl;
 
     struct BoundingBox
     {
@@ -199,6 +161,7 @@ void MeshV2::Init(const std::string& filePath)
     {
         mVertices.push_back({ {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z}, {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z}, {mVertexToBonesVector[i]}});
         // std::cout << mesh->mNormals[i].x << " || " << mesh->mNormals[i].y << " || " << mesh->mNormals[i].z << std::endl;
+
         if (mesh->mVertices[i].x < mBoundingBox[0].min) mBoundingBox[0].min = mesh->mVertices[i].x;
         if (mesh->mVertices[i].x > mBoundingBox[0].max) mBoundingBox[0].max = mesh->mVertices[i].x;
         if (mesh->mVertices[i].y < mBoundingBox[1].min) mBoundingBox[1].min = mesh->mVertices[i].y;
@@ -218,8 +181,6 @@ void MeshV2::Init(const std::string& filePath)
     double scaleVal = 2.0l / M;
     mTransform.Scale(glm::vec3(scaleVal, scaleVal, scaleVal));
 
-    // mTransformMatrix.Translation(glm::vec3(center[0], center[1], center[2]));
-
     // std::cout << "Processing indices..." << std::endl;
     for (unsigned int i = 0; i < mesh->mNumFaces; i++)
     {
@@ -229,11 +190,63 @@ void MeshV2::Init(const std::string& filePath)
         }
     }
 
+    void* ptr = (void*)(mVertices.data());
+
+    for (int i = 0; i <= sizeof(VertexV2) / sizeof(float); i++)
+        printf("Value: %f\n", *((float*)(ptr) + i));
+
+
+    ConfigureVAOLayout();
+
     mVBO.FillBuffer(mVertices.data(), mVertices.size() * sizeof(VertexV2), GL_STATIC_DRAW);
     mIBO.FillBuffer(mIndices.data(), mIndices.size(), GL_STATIC_DRAW);
 
     mVBO.Bind<VertexV2>(0);
     mVAO.AddBuffer(mVBO, mIBO);
+}
+
+void MeshV2::PrintAnimations(const aiScene* pScene)
+{
+    if (pScene->HasAnimations())
+    {
+        for (int j = 0; j < pScene->mNumAnimations; j++)
+        {
+            Debug::Print(pScene->mAnimations[j]->mName.C_Str());
+        }
+    }
+}
+
+void MeshV2::ConfigureVAOLayout()
+{
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    layout.Push<float>(3);
+    if (MAX_NUM_OF_BONES_PER_VERTEX > 4)
+    {
+        int numOfBones;
+        for (int j = MAX_NUM_OF_BONES_PER_VERTEX; j > 0; j -= 4)
+        {
+            numOfBones = (j >= 4) ? 4 : j;
+
+            layout.Push<float>(numOfBones); // layout.Push<int>(...) DOESN'T WORK FOR SOME REASON ? Shader gets wrong values
+        }
+        for (int j = MAX_NUM_OF_BONES_PER_VERTEX; j > 0; j -= 4)
+        {
+            numOfBones = (j >= 4) ? 4 : j;
+
+            layout.Push<float>(numOfBones);
+        }
+    }
+    else
+    {
+        layout.Push<float>(MAX_NUM_OF_BONES_PER_VERTEX);  // layout.Push<int>(...) DOESN'T WORK FOR SOME REASON ?
+        layout.Push<float>(MAX_NUM_OF_BONES_PER_VERTEX);
+    }
+
+    mVAO.Bind();
+    mVAO.SetLayout(layout, false);
+    mVAO.SetDrawingMode(GL_TRIANGLES);
+    mVAO.SetUsage(GL_STATIC_DRAW);
 }
 
 void MeshV2::Draw(Shader& shader)

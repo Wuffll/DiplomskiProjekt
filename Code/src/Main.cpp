@@ -50,6 +50,8 @@ int main(int argc, char* argv[])
 
     Shader shader(ExePath + "\\Shaders\\general.glsl");
 
+    pCallbackShader = &shader;
+
     // Objekt obj("FirstObject", ExePath + "\\Models\\Character.fbx", shader);
 
     MeshV2 mesh(ExePath + "\\Models\\Character.fbx");
@@ -61,12 +63,14 @@ int main(int argc, char* argv[])
     Camera camera;
     camera.SetShader("view", &shader);
 
-    camera.SetPosition({ 0.0f, 0.0f, -5.0f });
+    camera.SetPosition({ 0.0f, -1.0f, -3.0f });
 
     Transform projection(glm::perspective(45.0f, 1.0f, 0.1f, 1000.0f));
 
     shader.Bind();
     shader.SetUniformMatrix4f("projection", projection.GetMatrix());
+
+    shader.SetUniform1i("uDisplayBoneIndex", 0);
 
     FpsManager fpsManager(120);
     TimeControl timer;
@@ -110,7 +114,7 @@ int main(int argc, char* argv[])
             glfwPollEvents();
         } while (!fpsManager.TimeToGo()); // should eventually replace while loop with sleep
 
-        std::cout << "FPS: " << fpsManager.GetCurrentFps() << std::endl;
+        // std::cout << "FPS: " << fpsManager.GetCurrentFps() << std::endl;
     }
 
     glfwTerminate();
@@ -152,6 +156,7 @@ GLFWwindow* InitWindow()
     }
 
     glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(MessageCallback, NULL);
 
     glfwSetKeyCallback(window, key_callback);

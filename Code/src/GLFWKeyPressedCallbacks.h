@@ -2,26 +2,19 @@
 
 #include <GLFW/glfw3.h>
 
-bool toggleModel = true, toggleRotation = false;
-
-void ToggleModel()
-{
-    toggleModel = !toggleModel;
-}
-
-void ToggleRotationMethod()
-{
-    toggleRotation = !toggleRotation;
-}
+Shader* pCallbackShader;
+unsigned int currentSelectedBone = 0;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_E && action == GLFW_PRESS)
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
-        ToggleModel();
-    }
-    else if (key == GLFW_KEY_R && action == GLFW_PRESS)
-    {
-        ToggleRotationMethod();
+        currentSelectedBone++;
+        if (currentSelectedBone > 65)
+            currentSelectedBone = 0;
+
+        printf("Currently selected bone index: %u\n", currentSelectedBone);
+
+        pCallbackShader->SetUniform1i("uDisplayBoneIndex", currentSelectedBone);
     }
 }

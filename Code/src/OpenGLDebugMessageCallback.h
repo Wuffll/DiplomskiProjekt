@@ -56,5 +56,6 @@ void GLAPIENTRY MessageCallback(GLenum source,
     std::cout << std::endl << "---------------" << std::endl;
     std::cout << std::endl;
 
-    exit(id);
+
+    Debug::ThrowException("");
 }
