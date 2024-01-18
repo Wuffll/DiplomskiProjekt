@@ -228,7 +228,7 @@ void MeshV2::ConfigureVAOLayout()
         {
             numOfBones = (j >= 4) ? 4 : j;
 
-            layout.Push<float>(numOfBones); // layout.Push<unsigned int>(...) DOESN'T WORK FOR SOME REASON ? Shader gets wrong values
+            layout.Push<unsigned int>(numOfBones);
         }
         for (int j = MAX_NUM_OF_BONES_PER_VERTEX; j > 0; j -= 4)
         {
@@ -239,7 +239,7 @@ void MeshV2::ConfigureVAOLayout()
     }
     else
     {
-        layout.Push<float>(MAX_NUM_OF_BONES_PER_VERTEX);  // layout.Push<unsigned int>(...) DOESN'T WORK FOR SOME REASON ?
+        layout.Push<unsigned int>(MAX_NUM_OF_BONES_PER_VERTEX);
         layout.Push<float>(MAX_NUM_OF_BONES_PER_VERTEX);
     }
 

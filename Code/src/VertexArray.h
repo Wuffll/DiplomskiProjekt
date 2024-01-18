@@ -27,6 +27,7 @@ public:
 private:
 
 	void AssignVertexAttributes();
+	void VertexAttribFormat(const unsigned int& attributeIndex, const unsigned int& count, const int& type, const bool& normalized, const unsigned int& relativeOffset);
 
 	static unsigned int ActiveVAO;
 

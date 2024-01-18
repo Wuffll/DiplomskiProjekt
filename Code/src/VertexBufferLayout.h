@@ -24,6 +24,11 @@ struct VertexBufferElement
 		return 0;
 	}
 
+	static bool IsIntegerType(GLenum type)
+	{
+		return (type == GL_INT || type == GL_UNSIGNED_INT || type == GL_BYTE || type == GL_UNSIGNED_BYTE || type == GL_SHORT || type == GL_UNSIGNED_SHORT) ? true : false;
+	}
+
 	bool operator==(const VertexBufferElement& rhs)
 	{
 		return type == rhs.type && count == rhs.count && normalized == rhs.normalized;

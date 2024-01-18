@@ -91,7 +91,7 @@ void VertexArray::AssignVertexAttributes()
 
 		glEnableVertexAttribArray(i);
 		// glVertexAttribPointer(i, e.count, e.type, e.normalized, mLayout.GetStride(), (void*)(offset));
-		glVertexAttribFormat(i, e.count, e.type, e.normalized, (mLayoutBuffersSeperated) ? 0 : offset);
+		VertexAttribFormat(i, e.count, e.type, e.normalized, (mLayoutBuffersSeperated) ? 0 : offset);
 		glVertexAttribBinding(i, bindingIndex);
 
 		if (mLayoutBuffersSeperated) 
@@ -99,4 +99,13 @@ void VertexArray::AssignVertexAttributes()
 
 		offset += e.count * VertexBufferElement::SizeOfDataType(e.type);
 	}
+}
+
+void VertexArray::VertexAttribFormat(const unsigned int& attributeIndex, const unsigned int& count, const int& type, const bool& normalized, const unsigned int& relativeOffset)
+{
+	if (VertexBufferElement::IsIntegerType(type))
+		glVertexAttribIFormat(attributeIndex, count, type, relativeOffset);
+		
+	else
+		glVertexAttribFormat(attributeIndex, count, type, normalized, relativeOffset);
 }
