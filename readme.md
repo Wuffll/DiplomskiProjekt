@@ -7,16 +7,15 @@
 
 ## Build steps
 
-Once you have clones the repository, make sure to do the following steps.
+Once you have cloned the repository, make sure to do the following steps.
 
 1. Unzip the Dependencies.zip file (it was zipped due to the size being over 100 MB)
-2. Once you open the .sln file, make sure the configuration is set to Debug + Win32 (might get updated later to work on Release)
-3. In case you run into any problem, consult the following section (Troubleshooting problems)
+2. Once you open the .sln file, make sure the configuration is set to Debug + Win32(x86) (might get updated later to work on Release too)
+3. In case you run into any problem, take a look at the following section (Troubleshooting problems)
 
 ## Troubleshooting problems
 There are several things to keep in mind when the program isn't able to execute or throws an exception.
 
-1. Check whether there is a message in the command line. I tried to print out a message before throwing an exception to see what might be the issue.
-2. If there is a message about a missing .dll file, make sure to put the .dll file from the Dependencies/dll folder into the folder where the executable is. **As of writing this**, that only includes the file for Assimp (assimp-vc143-mt.dll).
-3. Make sure that the *#define*'s at the beginning of the main.cpp file are correct according to your repository directory. If you are running this on your machine, you will most likely (99.9%) have to change the paths in the main.cpp file.
+1. Check whether there is a message in the command line. I tried to print out a message before throwing an exception to see what might be the issue
+2. If you find any issues, forward them to me and I will put it up here until it is fixed.
 ---
