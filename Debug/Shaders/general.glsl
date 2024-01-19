@@ -2,6 +2,7 @@
 #version 450 core
 
 #define MAX_NUM_OF_BONES_PER_VERTEX 8
+#define MAX_BONES 100
 
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 color;
@@ -14,7 +15,10 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
+uniform mat4 uBones[MAX_BONES];
+
 out vec3 vColor;
+out vec3 vLocalPos;
 flat out uvec4 vBoneIDs_1;
 flat out uvec4 vBoneIDs_2;
 out vec4 vBoneWeights_1;
@@ -22,7 +26,22 @@ out vec4 vBoneWeights_2;
 
 void main()
 {
-	gl_Position = projection * view * model * vec4(position, 1.0f);
+	mat4 boneTransform = mat4(vec4(0.0f), vec4(0.0f), vec4(0.0f), vec4(0.0f));
+	
+	for (int j = 0; j < MAX_NUM_OF_BONES_PER_VERTEX; j++)
+	{
+		if(j < 4)
+		{
+			boneTransform += uBones[boneIDs_1[j]] * vBoneWeights_1[j];
+		}
+		else 
+		{
+			boneTransform += uBones[boneIDs_2[j-4]] * vBoneWeights_2[j-4];
+		}
+	}
+
+	gl_Position = projection * view * model * boneTransform * vec4(position, 1.0f);
+	vLocalPos = position;
 	vColor = color;
 	vBoneIDs_1 = boneIDs_1;
 	vBoneIDs_2 = boneIDs_2;
@@ -38,6 +57,7 @@ void main()
 uniform int uDisplayBoneIndex;
 
 in vec3 vColor;
+in vec3 vLocalPos;
 flat in uvec4 vBoneIDs_1;
 flat in uvec4 vBoneIDs_2;
 in vec4 vBoneWeights_1;

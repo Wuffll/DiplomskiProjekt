@@ -40,6 +40,7 @@
 #define WINDOW_HEIGHT 600
 
 GLFWwindow* InitWindow();
+glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4* from);
 
 int main(int argc, char* argv[])
 {
@@ -79,6 +80,8 @@ int main(int argc, char* argv[])
 
     float timeBetweenPoints = 0.016f; // in seconds
 
+    std::vector<aiMatrix4x4> boneTransforms;
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -101,6 +104,12 @@ int main(int argc, char* argv[])
         }
 
         // renderer.Draw();
+
+        mesh.GetBoneTransforms(boneTransforms);
+        for (int i = 0; i < boneTransforms.size(); i++)
+        {
+            shader.SetUniformMatrix4f("uBones[" + STRING(i) + "]", aiMatrix4x4ToGlm(&boneTransforms[i]));
+        }
         mesh.Draw(shader);
 
         /* Swap front and back buffers */
@@ -119,6 +128,19 @@ int main(int argc, char* argv[])
 
     glfwTerminate();
     return 0;
+}
+
+inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4* from)
+{
+    glm::mat4 to;
+
+
+    to[0][0] = (GLfloat)from->a1; to[0][1] = (GLfloat)from->b1;  to[0][2] = (GLfloat)from->c1; to[0][3] = (GLfloat)from->d1;
+    to[1][0] = (GLfloat)from->a2; to[1][1] = (GLfloat)from->b2;  to[1][2] = (GLfloat)from->c2; to[1][3] = (GLfloat)from->d2;
+    to[2][0] = (GLfloat)from->a3; to[2][1] = (GLfloat)from->b3;  to[2][2] = (GLfloat)from->c3; to[2][3] = (GLfloat)from->d3;
+    to[3][0] = (GLfloat)from->a4; to[3][1] = (GLfloat)from->b4;  to[3][2] = (GLfloat)from->c4; to[3][3] = (GLfloat)from->d4;
+
+    return to;
 }
 
 GLFWwindow* InitWindow()
