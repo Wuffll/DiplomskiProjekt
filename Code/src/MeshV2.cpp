@@ -154,7 +154,7 @@ void MeshV2::ReadNodeHeirarchy(const aiNode* pNode, const aiMatrix4x4& parentTra
 
     aiMatrix4x4 nodeTransformation(pNode->mTransformation);
 
-    printf("%s - ", nodeName.c_str());
+    // printf("%s - \n", nodeName.c_str());
 
     aiMatrix4x4 globalTransformation = parentTransform * nodeTransformation;
 

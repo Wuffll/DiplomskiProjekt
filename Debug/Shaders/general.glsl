@@ -23,20 +23,23 @@ flat out uvec4 vBoneIDs_1;
 flat out uvec4 vBoneIDs_2;
 out vec4 vBoneWeights_1;
 out vec4 vBoneWeights_2;
+out mat4 vBone;
+out float vValue;
 
 void main()
 {
-	mat4 boneTransform = mat4(vec4(0.0f), vec4(0.0f), vec4(0.0f), vec4(0.0f));
+	mat4 boneTransform = mat4(0.0f);
+	
 	
 	for (int j = 0; j < MAX_NUM_OF_BONES_PER_VERTEX; j++)
 	{
 		if(j < 4)
 		{
-			boneTransform += uBones[boneIDs_1[j]] * vBoneWeights_1[j];
+			boneTransform += uBones[boneIDs_1[j]] * boneWeights_1[j];
 		}
 		else 
 		{
-			boneTransform += uBones[boneIDs_2[j-4]] * vBoneWeights_2[j-4];
+			boneTransform += uBones[boneIDs_2[j-4]] * boneWeights_2[j-4];
 		}
 	}
 
@@ -68,58 +71,64 @@ out vec4 FragColor;
 void main()
 {
 	bool found = false;
-	for (int j = 0; j < MAX_NUM_OF_BONES_PER_VERTEX / 2; j++)
+	
+	for (int j = 0; j < MAX_NUM_OF_BONES_PER_VERTEX; j++)
 	{
-		if (vBoneIDs_1[j] == uDisplayBoneIndex)
+		// Bones 0 - 3
+		if( j < 4)
 		{
-			if( vBoneWeights_1[j] >= 0.7 )
+			if (vBoneIDs_1[j] == uDisplayBoneIndex)
 			{
-				FragColor = vec4(1.0, 0.0, 0.0, 0.0) * vBoneWeights_1[j];
-			} 
-			else if( vBoneWeights_1[j] >= 0.4 && vBoneWeights_1[j] <= 0.6 )
-			{
-				FragColor = vec4(0.0, 1.0, 0.0, 0.0) * vBoneWeights_1[j];
-			} 
-			else if( vBoneWeights_1[j] >= 0.1 )
-			{
-				FragColor = vec4(1.0, 1.0, 0.0, 0.0) * vBoneWeights_1[j];
+				if( vBoneWeights_1[j] >= 0.7 )
+				{
+					FragColor = vec4(1.0, 0.0, 0.0, 0.0) * vBoneWeights_1[j];
+				} 
+				else if( vBoneWeights_1[j] >= 0.4 && vBoneWeights_1[j] <= 0.6 )
+				{
+					FragColor = vec4(0.0, 1.0, 0.0, 0.0) * vBoneWeights_1[j];
+				} 
+				else if( vBoneWeights_1[j] >= 0.1 )
+				{
+					FragColor = vec4(1.0, 1.0, 0.0, 0.0) * vBoneWeights_1[j];
+				}
+				else 
+				{
+					FragColor = vec4(0.1, 0.1, 0.8, 1.0);
+				}
+				
+				found = true;
+				break;
 			}
-			else 
-			{
-				FragColor = vec4(0.1, 0.1, 0.8, 1.0);
-			}
-			
-			found = true;
-			break;
 		}
-	}
-	for (int j = 0; j < MAX_NUM_OF_BONES_PER_VERTEX / 2 && !found; j++)
-	{
-		int index = j + 4;
-		if (vBoneIDs_2[index] == uDisplayBoneIndex)
+		// Bones 4 - 7
+		else
 		{
-			if( vBoneWeights_2[index] >= 0.7 )
+			if (vBoneIDs_2[j - 4] == uDisplayBoneIndex)
 			{
-				FragColor = vec4(1.0, 0.0, 0.0, 1.0) * vBoneWeights_2[index];
-			} 
-			else if( vBoneWeights_2[index] >= 0.4 && vBoneWeights_2[index] <= 0.6 )
-			{
-				FragColor = vec4(0.0, 1.0, 0.0, 1.0) * vBoneWeights_2[index];
-			} 
-			else if( vBoneWeights_2[index] >= 0.1 )
-			{
-				FragColor = vec4(1.0, 1.0, 0.0, 1.0) * vBoneWeights_2[index];
-			}
-			else 
-			{
-				FragColor = vec4(0.1, 0.1, 0.8, 1.0);
-			}
+				if( vBoneWeights_2[j-4] >= 0.7 )
+				{
+					FragColor = vec4(1.0, 0.0, 0.0, 1.0) * vBoneWeights_2[j-4];
+				} 
+				else if( vBoneWeights_2[j-4] >= 0.4 && vBoneWeights_2[j-4] <= 0.6 )
+				{
+					FragColor = vec4(0.0, 1.0, 0.0, 1.0) * vBoneWeights_2[j-4];
+				} 
+				else if( vBoneWeights_2[j-4] >= 0.1 )
+				{
+					FragColor = vec4(1.0, 1.0, 0.0, 1.0) * vBoneWeights_2[j-4];
+				}
+				else 
+				{
+					FragColor = vec4(0.1, 0.1, 0.8, 1.0);
+				}
 
-			found = true;
-			break;
+				found = true;
+				break;
+			}
 		}
 	}
 	
+	// In case the selected display bone is not associated with this pixel
 	if(!found)
-		FragColor = vec4(0.1, 0.1, 0.8, 1.0);
+		FragColor = vec4(0.15, 0.15, 0.75, 1.0);
 }

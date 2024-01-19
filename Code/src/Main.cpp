@@ -110,6 +110,7 @@ int main(int argc, char* argv[])
         {
             shader.SetUniformMatrix4f("uBones[" + STRING(i) + "]", aiMatrix4x4ToGlm(&boneTransforms[i]));
         }
+
         mesh.Draw(shader);
 
         /* Swap front and back buffers */
