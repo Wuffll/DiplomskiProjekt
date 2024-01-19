@@ -5,6 +5,9 @@
 #include <map>
 
 #include <assimp/scene.h>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+
 #include <glm/glm.hpp>
 
 #include "Debug.h"
@@ -78,7 +81,7 @@ public:
 
 	void Init(const std::string& filePath);
 
-	void GetBoneTransforms(std::vector<aiMatrix4x4>& transforms)
+	void GetBoneTransforms(std::vector<aiMatrix4x4>& transforms);
 
 private:
 
