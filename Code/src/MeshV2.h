@@ -43,6 +43,18 @@ struct VertexBoneData
 	}
 };
 
+struct BoneInfo
+{
+	aiMatrix4x4 mOffsetMatrix;
+	aiMatrix4x4 mFinalTransformation;
+
+	BoneInfo(const aiMatrix4x4& offset)
+	{
+		mOffsetMatrix = offset;
+		mFinalTransformation = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+	}
+};
+
 struct VertexV2
 {
 	glm::vec3 mPos;
@@ -62,21 +74,32 @@ public:
 	const std::string& GetFilePath() const;
 	void SetFilePath(const std::string& filePath);
 
-	void ParseScene(const aiScene* pScene);
-	void ParseMeshes(const aiScene* pScene);
-	void ParseMeshBones(const unsigned int& meshIndex, const aiMesh* pMesh);
-	void ParseSingleBone(const unsigned int& meshIndex, const aiBone* pBone);
-
-	int GetBoneID(const aiBone* pBone);
-
 	void Draw(Shader& shader);
 
 	void Init(const std::string& filePath);
 
+	void GetBoneTransforms(std::vector<aiMatrix4x4>& transforms)
+
 private:
 
+	void ParseScene(const aiScene* pScene);
+	void ParseHierarchy(const aiScene* pScene);
+
+	void ParseMeshes(const aiScene* pScene);
+	void ParseMeshBones(const unsigned int& meshIndex, const aiMesh* pMesh);
+	void ParseSingleBone(const unsigned int& meshIndex, const aiBone* pBone);
+
+	void ParseNode(const aiNode* pNode);
+
+	int GetBoneID(const aiBone* pBone);
+	void ReadNodeHeirarchy(const aiNode* pNode, const aiMatrix4x4& parentTransform);
+
 	void PrintAnimations(const aiScene* pScene);
+	void PrintAssimpMatrix(const aiMatrix4x4& matrix);
+
 	void ConfigureVAOLayout();
+
+
 
 	std::string mFilePath;
 
@@ -92,5 +115,9 @@ private:
 
 	std::vector<unsigned int> mIndices;
 	std::vector<VertexV2> mVertices;
+	std::vector<BoneInfo> mBoneInfo; // one struct per bone
+
+	Assimp::Importer mImporter;
+	const aiScene* mPScene = nullptr;
 
 };

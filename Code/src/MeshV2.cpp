@@ -37,6 +37,13 @@ void MeshV2::SetFilePath(const std::string& filePath)
 void MeshV2::ParseScene(const aiScene* pScene)
 {
     ParseMeshes(pScene);
+
+    ParseHierarchy(pScene);
+}
+
+void MeshV2::ParseHierarchy(const aiScene* pScene)
+{
+    ParseNode(pScene->mRootNode);
 }
 
 void MeshV2::ParseMeshes(const aiScene* pScene)
@@ -87,8 +94,14 @@ void MeshV2::ParseSingleBone(const unsigned int& meshIndex, const aiBone* pBone)
     printf("\tBone '%s' => num vertices affected by this bone: %d\n", pBone->mName.C_Str(), pBone->mNumWeights);
 
     int boneId = GetBoneID(pBone);
-    printf("bone id %d\n", boneId);
 
+    PrintAssimpMatrix(pBone->mOffsetMatrix);
+
+    if (boneId == mBoneInfo.size())
+    {
+        BoneInfo info(pBone->mOffsetMatrix);
+        mBoneInfo.push_back(info);
+    }
     
     for (int j = 0; j < pBone->mNumWeights; j++)
     {
@@ -98,7 +111,6 @@ void MeshV2::ParseSingleBone(const unsigned int& meshIndex, const aiBone* pBone)
         const aiVertexWeight& vWeight = pBone->mWeights[j];
 
         unsigned int globalVertexID = mMeshBaseVector[meshIndex] + vWeight.mVertexId;
-        // printf("Vertex id %d ", globalVertexID);
         
         if (globalVertexID >= mVertexToBonesVector.size())
             Debug::ThrowException("globalVertexID out of range!");
@@ -106,6 +118,19 @@ void MeshV2::ParseSingleBone(const unsigned int& meshIndex, const aiBone* pBone)
         mVertexToBonesVector[globalVertexID].AddBoneData(boneId, vWeight.mWeight);
     }
     
+}
+
+void MeshV2::ParseNode(const aiNode* pNode)
+{
+    printf(" Node name: '%s' num children %d num meshes %d\n", pNode->mName.C_Str(), pNode->mNumChildren, pNode->mNumMeshes);
+    printf(" Node transformation\n");
+    PrintAssimpMatrix(pNode->mTransformation);
+
+    for (int j = 0; j < pNode->mNumChildren; j++)
+    {
+        printf(" --- %d ---\n", j);
+        ParseNode(pNode->mChildren[j]);
+    }
 }
 
 int MeshV2::GetBoneID(const aiBone* pBone)
@@ -126,27 +151,47 @@ int MeshV2::GetBoneID(const aiBone* pBone)
     return boneID;
 }
 
+void MeshV2::ReadNodeHeirarchy(const aiNode* pNode, const aiMatrix4x4& parentTransform)
+{
+    std::string nodeName(pNode->mName.C_Str());
+
+    aiMatrix4x4 nodeTransformation(pNode->mTransformation);
+
+    printf("%s - ", nodeName.c_str());
+
+    aiMatrix4x4 globalTransformation = parentTransform * nodeTransformation;
+
+    if (mBoneNameToIndexMap.find(nodeName) != mBoneNameToIndexMap.end())
+    {
+        unsigned int boneIndex = mBoneNameToIndexMap[nodeName];
+        mBoneInfo[boneIndex].mFinalTransformation = globalTransformation * mBoneInfo[boneIndex].mOffsetMatrix;
+    }
+
+    for (int j = 0; j < pNode->mNumChildren; j++)
+    {
+        ReadNodeHeirarchy(pNode->mChildren[j], globalTransformation);
+    }
+}
+
 void MeshV2::Init(const std::string& filePath)
 {
-    Assimp::Importer importer;
-    
-    const aiScene* pScene = importer.ReadFile(filePath.c_str(),
+    mPScene = mImporter.ReadFile(filePath.c_str(),
         aiProcess_CalcTangentSpace |
         aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices |
         aiProcess_SortByPType |
         aiProcess_GenNormals);
     
-    if (pScene == nullptr)
+    if (mPScene == nullptr)
     {
         Debug::ThrowException("Unable to import from defined file! (" + filePath + ")");
     }
     
-    ParseScene(pScene);
+    ParseScene(mPScene);
 
-    PrintAnimations(pScene);
+    PrintAnimations(mPScene);
 
-    auto mesh = pScene->mMeshes[0];
+    auto mesh = mPScene->mMeshes[0];
 
     mVertices.reserve(mesh->mNumVertices);
     mIndices.reserve(mesh->mNumFaces * 3);
@@ -205,6 +250,20 @@ void MeshV2::Init(const std::string& filePath)
     mVAO.AddBuffer(mVBO, mIBO);
 }
 
+ void MeshV2::GetBoneTransforms(std::vector<aiMatrix4x4>& transforms)
+{
+    transforms.resize(mBoneInfo.size());
+
+    aiMatrix4x4 Identity;
+    
+    ReadNodeHeirarchy(mPScene->mRootNode, Identity);
+
+    for (int j = 0; j < mBoneInfo.size(); j++)
+    {
+        transforms[j] = mBoneInfo[j].mFinalTransformation;
+    }
+}
+
 void MeshV2::PrintAnimations(const aiScene* pScene)
 {
     if (pScene->HasAnimations())
@@ -214,6 +273,14 @@ void MeshV2::PrintAnimations(const aiScene* pScene)
             Debug::Print(pScene->mAnimations[j]->mName.C_Str());
         }
     }
+}
+
+void MeshV2::PrintAssimpMatrix(const aiMatrix4x4& matrix)
+{
+    printf(" %f %f %f %f\n", matrix.a1, matrix.a2, matrix.a3, matrix.a4);
+    printf(" %f %f %f %f\n", matrix.b1, matrix.b2, matrix.b3, matrix.b4);
+    printf(" %f %f %f %f\n", matrix.c1, matrix.c2, matrix.c3, matrix.c4);
+    printf(" %f %f %f %f\n", matrix.d1, matrix.d2, matrix.d3, matrix.d4);
 }
 
 void MeshV2::ConfigureVAOLayout()
