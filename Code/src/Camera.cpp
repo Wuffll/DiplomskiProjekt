@@ -76,7 +76,12 @@ void Camera::ResetTransform()
 void Camera::UpdateShaderUniform()
 {
 	if (mShader != nullptr)
+	{
 		mShader->SetUniformMatrix4f(mShaderUniformName, mView.GetMatrix());
+		mShader->SetUniform3fv("uViewPos", mView.GetPosition() * -1.0f);
+	}
 	else
+	{
 		Debug::ThrowException("Shader not set for Camera!");
+	}
 }

@@ -80,8 +80,12 @@ public:
 	void Draw(Shader& shader);
 
 	void Init(const std::string& filePath);
+	void LoadMesh(aiMesh* mesh);
 
-	void GetBoneTransforms(std::vector<aiMatrix4x4>& transforms);
+	void SelectNextAnimation();
+
+	Transform& GetTransform();
+	void GetBoneTransforms(const double& timeInSeconds, std::vector<aiMatrix4x4>& transforms);
 
 private:
 
@@ -94,8 +98,18 @@ private:
 
 	void ParseNode(const aiNode* pNode);
 
+	void CalculateInterpolatedScaling(aiVector3D& scaling, const float& animationTimeTicks, const aiNodeAnim* pNodeAnim);
+	unsigned int FindScaling(const float& animationTimeTicks, const aiNodeAnim* pNodeAnim);
+
+	void CalculateInterpolatedRotation(aiQuaternion& rotationQ, const float& animationTimeTicks, const aiNodeAnim* pNodeAnim);
+	unsigned int FindRotation(const float& animationTimeTicks, const aiNodeAnim* pNodeAnim);
+
+	void CalculateInterpolatedPosition(aiVector3D& translation, const float& animationTimeTicks, const aiNodeAnim* pNodeAnim);
+	unsigned int FindPosition(const float& animationTimeTicks, const aiNodeAnim* pNodeAnim);
+
 	int GetBoneID(const aiBone* pBone);
-	void ReadNodeHeirarchy(const aiNode* pNode, const aiMatrix4x4& parentTransform);
+	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& nodeName);
+	void ReadNodeHeirarchy(const float& animationTimeTicks, const aiNode* pNode, const aiMatrix4x4& parentTransform);
 
 	void PrintAnimations(const aiScene* pScene);
 	void PrintAssimpMatrix(const aiMatrix4x4& matrix);
@@ -115,6 +129,9 @@ private:
 	IndexBuffer mIBO;
 
 	Transform mTransform;
+	aiMatrix4x4 mGlobalInverseTransform;
+
+	unsigned int mActiveAnimation = 0;
 
 	std::vector<unsigned int> mIndices;
 	std::vector<VertexV2> mVertices;

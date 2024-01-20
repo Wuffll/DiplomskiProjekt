@@ -84,6 +84,18 @@ void Shader::SetUniform4fv(const std::string& name, const std::vector<float>& ve
 	glUniform4fv(location, 4, vec4f.data());
 }
 
+void Shader::SetUniform3fv(const std::string& name, const glm::vec3& vec3f)
+{
+	Bind();
+
+	int location = GetUniformLocation(name);
+
+	if (location == -1)
+		return;
+
+	glUniform3fv(location, 1, &vec3f[0]);
+}
+
 Shader::~Shader()
 {
 	glDeleteProgram(mRendererID);

@@ -26,7 +26,22 @@ struct VertexBufferElement
 
 	static bool IsIntegerType(GLenum type)
 	{
-		return (type == GL_INT || type == GL_UNSIGNED_INT || type == GL_BYTE || type == GL_UNSIGNED_BYTE || type == GL_SHORT || type == GL_UNSIGNED_SHORT) ? true : false;
+		return (type == GL_BYTE || type == GL_SHORT || type == GL_INT || type == GL_UNSIGNED_BYTE || type == GL_UNSIGNED_SHORT || type == GL_UNSIGNED_INT);
+	}
+
+	static bool IsFloatingPointType(GLenum type)
+	{
+		return (type == GL_DOUBLE || type == GL_FLOAT || type == GL_HALF_FLOAT);
+	}
+
+	static bool IsFloat(GLenum type)
+	{
+		return (type == GL_FLOAT || type == GL_HALF_FLOAT);
+	}
+
+	static bool IsDouble(GLenum type)
+	{
+		return type == GL_DOUBLE;
 	}
 
 	bool operator==(const VertexBufferElement& rhs)

@@ -40,7 +40,6 @@
 #define WINDOW_HEIGHT 600
 
 GLFWwindow* InitWindow();
-glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4* from);
 
 int main(int argc, char* argv[])
 {
@@ -56,12 +55,15 @@ int main(int argc, char* argv[])
     // Objekt obj("FirstObject", ExePath + "\\Models\\Character.fbx", shader);
 
     MeshV2 mesh(ExePath + "\\Models\\Character.fbx");
+    pCallbackActiveMesh = &mesh;
     
     Renderer renderer(shader);
 
     // renderer.AddDrawableObject(obj);
 
     Camera camera;
+    pCallbackCamera = &camera;
+
     camera.SetShader("view", &shader);
 
     camera.SetPosition({ 0.0f, -1.0f, -3.0f });
@@ -72,11 +74,13 @@ int main(int argc, char* argv[])
     shader.SetUniformMatrix4f("projection", projection.GetMatrix());
 
     shader.SetUniform1i("uDisplayBoneIndex", 0);
+    shader.SetUniform3fv("uLightColor", {0.9f, 0.95f, 1.0f});
 
-    FpsManager fpsManager(120);
+    FpsManager fpsManager(60);
     TimeControl timer;
     timer.Start();
-    float deltaTime = 0.0f;
+    double startTime = 0.0;
+    double timePassed = 0.0;
 
     float timeBetweenPoints = 0.016f; // in seconds
 
@@ -93,7 +97,6 @@ int main(int argc, char* argv[])
         // obj.SetActive(toggleModel);
 
         // Time passed
-        deltaTime += (float)timer.End();
 
         // obj.GetTransform().Rotate({ 0.0f, 0.0f, 180.0f }); // upside down model when going towards screen
  
@@ -105,10 +108,14 @@ int main(int argc, char* argv[])
 
         // renderer.Draw();
 
-        mesh.GetBoneTransforms(boneTransforms);
+        timePassed += timer.End();
+
+        // Debug::Print("Time passed: " + STRING(timePassed));
+
+        mesh.GetBoneTransforms(timePassed, boneTransforms);
         for (int i = 0; i < boneTransforms.size(); i++)
         {
-            shader.SetUniformMatrix4f("uBones[" + STRING(i) + "]", aiMatrix4x4ToGlm(&boneTransforms[i]));
+            shader.SetUniformMatrix4f("uBones[" + STRING(i) + "]", Transform::aiMatrix4x4ToGlm(&boneTransforms[i]));
         }
 
         mesh.Draw(shader);
@@ -129,19 +136,6 @@ int main(int argc, char* argv[])
 
     glfwTerminate();
     return 0;
-}
-
-inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4* from)
-{
-    glm::mat4 to;
-
-
-    to[0][0] = (GLfloat)from->a1; to[0][1] = (GLfloat)from->b1;  to[0][2] = (GLfloat)from->c1; to[0][3] = (GLfloat)from->d1;
-    to[1][0] = (GLfloat)from->a2; to[1][1] = (GLfloat)from->b2;  to[1][2] = (GLfloat)from->c2; to[1][3] = (GLfloat)from->d2;
-    to[2][0] = (GLfloat)from->a3; to[2][1] = (GLfloat)from->b3;  to[2][2] = (GLfloat)from->c3; to[2][3] = (GLfloat)from->d3;
-    to[3][0] = (GLfloat)from->a4; to[3][1] = (GLfloat)from->b4;  to[3][2] = (GLfloat)from->c4; to[3][3] = (GLfloat)from->d4;
-
-    return to;
 }
 
 GLFWwindow* InitWindow()

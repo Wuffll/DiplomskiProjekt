@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <assimp/matrix4x4.h>
 // To be implemented
 enum RotationOrder
 {
@@ -38,6 +38,9 @@ public:
 	void Scale(const glm::vec3& scale);
 
 	const glm::mat4& GetMatrix();
+
+
+	static glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4* from);
 
 private:
 

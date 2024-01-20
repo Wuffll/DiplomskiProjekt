@@ -105,7 +105,10 @@ void VertexArray::VertexAttribFormat(const unsigned int& attributeIndex, const u
 {
 	if (VertexBufferElement::IsIntegerType(type))
 		glVertexAttribIFormat(attributeIndex, count, type, relativeOffset);
-		
-	else
+	else if (VertexBufferElement::IsFloat(type))
 		glVertexAttribFormat(attributeIndex, count, type, normalized, relativeOffset);
+	else if (VertexBufferElement::IsDouble(type))
+		glVertexAttribLFormat(attributeIndex, count, type, relativeOffset);
+	else
+		Debug::ThrowException("Not supported as of yet!");
 }

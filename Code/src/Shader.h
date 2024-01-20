@@ -35,6 +35,7 @@ public:
 	void SetUniform4f(const std::string& name, float f0, float f1, float f2, float f3);
 
 	void SetUniform4fv(const std::string& name, const std::vector<float>& vec4f);
+	void SetUniform3fv(const std::string& name, const glm::vec3& vec3f);
 
 
 	~Shader();
