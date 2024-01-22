@@ -111,6 +111,50 @@ void MeshV2::ParseSingleBone(const unsigned int& meshIndex, const aiBone* pBone)
         mVertexToBonesVector[globalVertexID].AddBoneData(boneId, vWeight.mWeight);
     }
     
+    MarkRequiredNodesForBone(pBone);
+}
+
+void MeshV2::MarkRequiredNodesForBone(const aiBone* pBone)
+{
+    std::string NodeName(pBone->mName.C_Str());
+
+    const aiNode* pParent = NULL;
+
+    do
+    {
+        std::map<std::string, NodeInfo>::iterator it = mRequiredNodeMap.find(NodeName);
+
+        if (it == mRequiredNodeMap.end())
+        {
+            printf("Cannot find bone %s in the hierarchy\n", NodeName.c_str());
+            assert(0);
+        }
+
+        it->second.isRequired = true;
+
+        pParent = it->second.pNode->mParent;
+
+        if (pParent)
+        {
+            NodeName = std::string(pParent->mName.C_Str());
+        }
+
+    } while (pParent);
+}
+
+
+void MeshV2::InitializeRequiredNodeMap(const aiNode* pNode)
+{
+    std::string NodeName(pNode->mName.C_Str());
+
+    NodeInfo info(pNode);
+
+    mRequiredNodeMap[NodeName] = info;
+
+    for (unsigned int i = 0; i < pNode->mNumChildren; i++)
+    {
+        InitializeRequiredNodeMap(pNode->mChildren[i]);
+    }
 }
 
 void MeshV2::ParseNode(const aiNode* pNode)
@@ -237,6 +281,24 @@ unsigned int MeshV2::FindPosition(const float& animationTimeTicks, const aiNodeA
     return 0;
 }
 
+void MeshV2::CalculateLocalTransform(LocalTransform& transform, float animationTimeTicks, const aiNodeAnim* pNodeAnim)
+{
+    CalculateInterpolatedScaling(transform.mScaling, animationTimeTicks, pNodeAnim);
+    CalculateInterpolatedRotation(transform.mRotation, animationTimeTicks, pNodeAnim);
+    CalculateInterpolatedPosition(transform.mTranslation, animationTimeTicks, pNodeAnim);
+}
+
+float MeshV2::CalculateAnimationTimeTicks(const float& timeInSeconds, const unsigned int& animationIndex)
+{
+    float ticksPerSecond = (float)(mPScene->mAnimations[animationIndex]->mTicksPerSecond != 0 ? mPScene->mAnimations[animationIndex]->mTicksPerSecond : 25.0f);
+    float timeInTicks = timeInSeconds * ticksPerSecond;
+    // we need to use the integral part of mDuration for the total length of the animation
+    float duration = 0.0f;
+    float fraction = modf((float)mPScene->mAnimations[animationIndex]->mDuration, &duration);
+    float animationTimeTicks = fmod(timeInTicks, duration);
+    return animationTimeTicks;
+}
+
 int MeshV2::GetBoneID(const aiBone* pBone)
 {
     int boneID = 0;
@@ -313,6 +375,94 @@ void MeshV2::ReadNodeHeirarchy(const float& animationTimeTicks, const aiNode* pN
     }
 }
 
+void MeshV2::ReadNodeHierarchyBlended(float startAnimationTimeTicks, float endAnimationTimeTicks, const aiNode* pNode, const aiMatrix4x4& ParentTransform,
+    const aiAnimation& startAnimation, const aiAnimation& endAnimation, float blendFactor)
+{
+    std::string NodeName(pNode->mName.data);
+
+    aiMatrix4x4 NodeTransformation = pNode->mTransformation;
+
+    const aiNodeAnim* pStartNodeAnim = FindNodeAnim(&startAnimation, NodeName);
+
+    LocalTransform StartTransform;
+
+    if (pStartNodeAnim)
+    {
+        CalculateLocalTransform(StartTransform, startAnimationTimeTicks, pStartNodeAnim);
+    }
+
+    LocalTransform EndTransform;
+
+    const aiNodeAnim* pEndNodeAnim = FindNodeAnim(&endAnimation, NodeName);
+
+    if ((pStartNodeAnim && !pEndNodeAnim) || (!pStartNodeAnim && pEndNodeAnim))
+    {
+        printf("On the node %s there is an animation node for only one of the start/end animations.\n", NodeName.c_str());
+        printf("This case is not supported\n");
+        exit(0);
+    }
+
+    if (pEndNodeAnim)
+    {
+        CalculateLocalTransform(EndTransform, endAnimationTimeTicks, pEndNodeAnim);
+    }
+
+    if (pStartNodeAnim && pEndNodeAnim)
+    {
+        // Interpolate scaling
+        const aiVector3D& Scale0 = StartTransform.mScaling;
+        const aiVector3D& Scale1 = EndTransform.mScaling;
+        aiVector3D BlendedScaling = (1.0f - blendFactor) * Scale0 + Scale1 * blendFactor;
+        aiMatrix4x4 ScalingM;
+        aiMatrix4x4::Scaling(BlendedScaling, ScalingM);
+
+        // Interpolate rotation
+        const aiQuaternion& Rot0 = StartTransform.mRotation;
+        const aiQuaternion& Rot1 = EndTransform.mRotation;
+        aiQuaternion BlendedRot;
+        aiQuaternion::Interpolate(BlendedRot, Rot0, Rot1, blendFactor);
+        aiMatrix4x4 RotationM = aiMatrix4x4(BlendedRot.GetMatrix());
+
+        // Interpolate translation
+        const aiVector3D& Pos0 = StartTransform.mTranslation;
+        const aiVector3D& Pos1 = EndTransform.mTranslation;
+        aiVector3D BlendedTranslation = (1.0f - blendFactor) * Pos0 + Pos1 * blendFactor;
+        aiMatrix4x4 TranslationM;
+        aiMatrix4x4::Translation(BlendedTranslation, TranslationM);
+
+        // Combine it all
+        NodeTransformation = TranslationM * RotationM * ScalingM;
+    }
+
+    aiMatrix4x4 GlobalTransformation = ParentTransform * NodeTransformation;
+
+    if (mBoneNameToIndexMap.find(NodeName) != mBoneNameToIndexMap.end())
+    {
+        unsigned int BoneIndex = mBoneNameToIndexMap[NodeName];
+        mBoneInfo[BoneIndex].mFinalTransformation = mGlobalInverseTransform * GlobalTransformation * mBoneInfo[BoneIndex].mOffsetMatrix;
+    }
+
+    for (unsigned int i = 0; i < pNode->mNumChildren; i++)
+    {
+        std::string ChildName(pNode->mChildren[i]->mName.data);
+
+        std::map<std::string, NodeInfo>::iterator it = mRequiredNodeMap.find(ChildName);
+
+        if (it == mRequiredNodeMap.end())
+        {
+            printf("Child %s cannot be found in the required node map\n", ChildName.c_str());
+            assert(0);
+        }
+
+        if (it->second.isRequired)
+        {
+            ReadNodeHierarchyBlended(startAnimationTimeTicks, endAnimationTimeTicks,
+                pNode->mChildren[i], GlobalTransformation, startAnimation, endAnimation, blendFactor);
+        }
+    }
+}
+
+
 void MeshV2::Init(const std::string& filePath)
 {
     mPScene = mImporter.ReadFile(filePath.c_str(),
@@ -327,6 +477,8 @@ void MeshV2::Init(const std::string& filePath)
         Debug::ThrowException("Unable to import from defined file! (" + filePath + ")");
     }
     
+    InitializeRequiredNodeMap(mPScene->mRootNode);
+
     ParseScene(mPScene);
 
     mGlobalInverseTransform = mPScene->mRootNode->mTransformation;
@@ -407,22 +559,62 @@ Transform& MeshV2::GetTransform()
     return mTransform;
 }
 
-void MeshV2::GetBoneTransforms(const double& timeInSeconds, std::vector<aiMatrix4x4>& transforms)
+void MeshV2::GetBoneTransforms(const double& timeInSeconds, std::vector<aiMatrix4x4>& transforms, const unsigned int& animationIndex)
 {
+    if (animationIndex >= mPScene->mNumAnimations)
+        Debug::ThrowException("Animation index out of range!");
+
     if (transforms.size() != mBoneInfo.size());
         transforms.resize(mBoneInfo.size());
 
     aiMatrix4x4 Identity;
 
-    float ticksPerSecond = (float)(mPScene->mAnimations[mActiveAnimation]->mTicksPerSecond != 0 ? mPScene->mAnimations[mActiveAnimation]->mTicksPerSecond : 25.0f);
-    float timeInTicks = (float) timeInSeconds * ticksPerSecond;
-    float animationTimeTicks = fmod(timeInTicks, (float)mPScene->mAnimations[mActiveAnimation]->mDuration);
+    float animationTimeTicks = CalculateAnimationTimeTicks(timeInSeconds, animationIndex);
+    const aiAnimation& animation = *(mPScene->mAnimations[animationIndex]);
     
     ReadNodeHeirarchy(animationTimeTicks, mPScene->mRootNode, Identity);
 
     for (int j = 0; j < mBoneInfo.size(); j++)
     {
         transforms[j] = mBoneInfo[j].mFinalTransformation;
+    }
+}
+
+void MeshV2::GetBoneTransoformsBlending(const float& animationTimeSec, std::vector<aiMatrix4x4>& transforms, const unsigned int& startAnimIndex, const unsigned int& endAnimIndex, const float& blendFactor)
+{
+    if (startAnimIndex >= mPScene->mNumAnimations)
+    {
+        printf("Invalid start animation index %d, max is %d\n", startAnimIndex, mPScene->mNumAnimations);
+        assert(0);
+    }
+
+    if (endAnimIndex >= mPScene->mNumAnimations)
+    {
+        printf("Invalid end animation index %d, max is %d\n", endAnimIndex, mPScene->mNumAnimations);
+        assert(0);
+    }
+
+    if ((blendFactor < 0.0f) || (blendFactor > 1.0f))
+    {
+        printf("Invalid blend factor %f\n", blendFactor);
+        assert(0);
+    }
+
+    float startAnimationTimeTicks = CalculateAnimationTimeTicks(animationTimeSec, startAnimIndex);
+    float endAnimationTimeTicks = CalculateAnimationTimeTicks(animationTimeSec, endAnimIndex);
+
+    const aiAnimation& startAnimation = *(mPScene->mAnimations[startAnimIndex]);
+    const aiAnimation& endAnimation = *(mPScene->mAnimations[endAnimIndex]);
+
+    aiMatrix4x4 Identity;
+
+    ReadNodeHierarchyBlended(startAnimationTimeTicks, endAnimationTimeTicks, mPScene->mRootNode, Identity, startAnimation, endAnimation, blendFactor);
+
+    transforms.resize(mBoneInfo.size());
+
+    for (unsigned int i = 0; i < mBoneInfo.size(); i++)
+    {
+        transforms[i] = mBoneInfo[i].mFinalTransformation;
     }
 }
 

@@ -82,6 +82,12 @@ int main(int argc, char* argv[])
     double startTime = 0.0;
     double timePassed = 0.0;
 
+    float blendingFactor = 0.0f;
+    pCallbackBlendFactor = &blendingFactor;
+
+    unsigned int selectedAnimation = 0;
+    pCallbackCurrentSelectedAnimation = &selectedAnimation;
+
     float timeBetweenPoints = 0.016f; // in seconds
 
     std::vector<aiMatrix4x4> boneTransforms;
@@ -112,7 +118,7 @@ int main(int argc, char* argv[])
 
         // Debug::Print("Time passed: " + STRING(timePassed));
 
-        mesh.GetBoneTransforms(timePassed, boneTransforms);
+        mesh.GetBoneTransoformsBlending(timePassed, boneTransforms, selectedAnimation, (selectedAnimation + 1) % 3, blendingFactor);
         for (int i = 0; i < boneTransforms.size(); i++)
         {
             shader.SetUniformMatrix4f("uBones[" + STRING(i) + "]", Transform::aiMatrix4x4ToGlm(&boneTransforms[i]));

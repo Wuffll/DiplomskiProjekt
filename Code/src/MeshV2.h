@@ -65,6 +65,24 @@ struct VertexV2
 	VertexBoneData mBoneData;
 };
 
+struct LocalTransform
+{
+	aiVector3D mScaling;
+	aiQuaternion mRotation;
+	aiVector3D mTranslation;
+};
+
+struct NodeInfo
+{
+
+	NodeInfo() {}
+
+	NodeInfo(const aiNode* n) { pNode = n; }
+
+	const aiNode* pNode = NULL;
+	bool isRequired = false;
+};
+
 class MeshV2
 {
 public:
@@ -85,7 +103,9 @@ public:
 	void SelectNextAnimation();
 
 	Transform& GetTransform();
-	void GetBoneTransforms(const double& timeInSeconds, std::vector<aiMatrix4x4>& transforms);
+
+	void GetBoneTransforms(const double& timeInSeconds, std::vector<aiMatrix4x4>& transforms, const unsigned int& animationIndex);
+	void GetBoneTransoformsBlending(const float& animationTimeSec, std::vector<aiMatrix4x4>& Transforms, const unsigned int& startAnimIndex, const unsigned int& endAnimIndex, const float& blendFactor);
 
 private:
 
@@ -95,6 +115,9 @@ private:
 	void ParseMeshes(const aiScene* pScene);
 	void ParseMeshBones(const unsigned int& meshIndex, const aiMesh* pMesh);
 	void ParseSingleBone(const unsigned int& meshIndex, const aiBone* pBone);
+
+	void MarkRequiredNodesForBone(const aiBone* pBone);
+	void InitializeRequiredNodeMap(const aiNode* pNode);
 
 	void ParseNode(const aiNode* pNode);
 
@@ -107,16 +130,21 @@ private:
 	void CalculateInterpolatedPosition(aiVector3D& translation, const float& animationTimeTicks, const aiNodeAnim* pNodeAnim);
 	unsigned int FindPosition(const float& animationTimeTicks, const aiNodeAnim* pNodeAnim);
 
+	void CalculateLocalTransform(LocalTransform& transform, float animationTimeTicks, const aiNodeAnim* pNodeAnim);
+
+	float CalculateAnimationTimeTicks(const float& timeInSeconds, const unsigned int& animationIndex);
+
 	int GetBoneID(const aiBone* pBone);
 	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& nodeName);
+
 	void ReadNodeHeirarchy(const float& animationTimeTicks, const aiNode* pNode, const aiMatrix4x4& parentTransform);
+	void ReadNodeHierarchyBlended(float startAnimationTimeTicks, float endAnimationTimeTicks, const aiNode* pNode, const aiMatrix4x4& ParentTransform,
+		const aiAnimation& startAnimation, const aiAnimation& endAnimation, float blendFactor);
 
 	void PrintAnimations(const aiScene* pScene);
 	void PrintAssimpMatrix(const aiMatrix4x4& matrix);
 
 	void ConfigureVAOLayout();
-
-
 
 	std::string mFilePath;
 
@@ -139,5 +167,7 @@ private:
 
 	Assimp::Importer mImporter;
 	const aiScene* mPScene = nullptr;
+
+	std::map<std::string, NodeInfo> mRequiredNodeMap;
 
 };
