@@ -1,9 +1,0 @@
-Implementacija animation blendinga (mijesanje/interpolacija animacija)
-
-Animation blending je jedna od tehnika računalne grafike koja omogućuje neprimjetnu/seamless promjenu između pokreta. Jedna je od važnijih tehnika koja omogućuje stvaranje realisticnih pokreta modela za medije poput video igrica, filmova, VR iskustava i ostalih. Učinkovitim kombiniranjem i interpolacijom između nekoliko animacija možemo dobiti više različitih animacija koje prikazuju glatke i prirodne pokrete modela. Tradicionalni način izrade animacije pomoću ključnih okvira nije bilo dovoljno precizno te bi krajnje animacije bile trzave i neprirodne. Animation blending riješava ovaj problem.
-
-Temelj metode animation blending je interpolacija između pozicija i orijentacija kako bi dobili glatku tranziciju između položaja modela. Korištenjem tehnike mješanja poput težinske sredine, omogućuje se miješanje dvije ili više animacija što omogućuje glatku i prirodnu animacija kao krajnji rezultat. Neki od glavnih primjena animation blendinga su: animacija likova, pokreti kamere u virtualnim scenama, međusobna interakcija objekata i ostali. 
-
-Umetni sliku: https://cdn.wolfire.com/blog/hierarchical/angular3.jpg
-
-Ovaj projektni rad bavi se implementacijom miješanja animacija, metodama miješanja animacija te potencijalnim poteškoćama prilikom implementacije. Opisan je postupak izgradnje sustava za jednostavnu interpolaciju između dvije animacije koji će se naknadno nadograditi kako bi mogao podržati više animacija i potencijalno interakciju između više objekata.
